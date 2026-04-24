@@ -1,0 +1,37 @@
+rules_version = '2';
+
+service cloud.firestore {
+  match /databases/{database}/documents {
+    
+    match /users/{userId} {
+      // 1. Anyone who is logged in (including anonymous) can read any user profile
+      // (This is useful if you want to show who added a video by name)
+      allow read: if request.auth != null;
+      
+      // 2. A user can ONLY create or update their own document
+      // The {userId} in the path must match the UID of the person signed in
+      allow write: if request.auth != null && request.auth.uid == userId;
+    }
+
+    // Rules for stations and their sub-collections
+    match /stations/{stationId} {
+      // 1. Allow reading the station document itself
+      allow read: if request.auth != null;
+      
+      // 2. Allow creating/updating stations (Server Actions handle this, but rules protect it)
+      allow write: if request.auth != null;
+
+      // 3. Explicit rules for the playlist sub-collection
+      match /playlist/{videoId} {
+        // Anyone logged in can read the playlist
+        allow read: if request.auth != null;
+        
+        // Explicitly allow likes sub-collection (if you're using it)
+        match /likes/{userId} {
+          allow read: if request.auth != null;
+          allow write: if request.auth != null && request.auth.uid == userId;
+        }
+      }
+    }
+  }
+}

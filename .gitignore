@@ -36,6 +36,11 @@ yarn-error.log*
 # vercel
 .vercel
 
+# local AI agent tooling
+.agents/
+.claude/
+
 # typescript
 *.tsbuildinfo
 next-env.d.ts
+house-party-next-firebase-adminsdk-fbsvc-ca460781a3.json
