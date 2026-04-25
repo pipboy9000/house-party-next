@@ -10,6 +10,7 @@ import { ChevronFirst, ChevronLast, LoaderCircle, Play, Plus } from "lucide-reac
 import { addToPlaylist } from "./actions";
 import { useAuth } from "@/src/components/AuthProvider";
 import Live from "@/src/components/Live";
+import YouTubePlayer from "@/src/components/YoutubePlayer";
 
 
 export default function StationPage() {
@@ -121,6 +122,28 @@ export default function StationPage() {
     setSearching(false);
   }
 
+  function onPlayerStateChange(event: YT.OnStateChangeEvent) {
+
+    const { ENDED, PLAYING, PAUSED, BUFFERING } = window.YT.PlayerState;
+
+    switch (event.data) {
+      case PLAYING:
+        console.log("Video is playing");
+        break;
+      case PAUSED:
+        console.log("Video is paused");
+        break;
+      case BUFFERING:
+        console.log("Video is buffering");
+        break;
+      case ENDED:
+        console.log("Video has ended");
+        break;
+      default:
+        console.log("Player state changed:", event.data);
+    }
+  }
+
   if (!stationData) return <div className="p-10 text-center animate-pulse">Tuning in...</div>;
 
   return (
@@ -146,13 +169,18 @@ export default function StationPage() {
       {/* LEFT: Current Track & Controls (7 cols) */}
       <div className="md:col-span-7 flex flex-col gap-6">
         <div className="aspect-square bg-linear-to-br from-indigo-900 to-slate-900 rounded-2xl shadow-2xl flex items-center justify-center overflow-hidden relative">
-          {/* Track Artwork would go here */}
-          <div className="text-center p-8">
-            <div className="w-48 h-48 bg-slate-800 rounded-lg mx-auto mb-6 shadow-lg flex items-center justify-center">
-              <span className="text-4xl">🎵</span>
-            </div>
-            <h2 className="text-2xl font-bold truncate">No Track Playing</h2>
-            <p className="text-slate-400">Add a song to the queue to get started</p>
+          <div className="w-full h-full aspect-video shadow-2xl flex items-center justify-center overflow-hidden relative">
+            {playlist.length > 0 ? (
+              <YouTubePlayer videoId={playlist[0].videoId} onStateChange={onPlayerStateChange} />
+            ) : (
+              <div className="text-center p-8">
+                <div className="w-48 h-48 bg-slate-800 rounded-lg mx-auto mb-6 shadow-lg flex items-center justify-center">
+                  <span className="text-4xl">🎵</span>
+                </div>
+                <h2 className="text-2xl font-bold truncate">No Track Playing</h2>
+                <p className="text-slate-400">Add a song to the queue to get started</p>
+              </div>
+            )}
           </div>
         </div>
 
