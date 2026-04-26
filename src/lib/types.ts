@@ -22,6 +22,8 @@ export interface Station {
   hostId: string;
   isPlaying: boolean;
   stationId: string;
+  videoTitle: string;
+  videoId: string;
   // add more fields later
 }
 
@@ -31,5 +33,12 @@ export interface Track {
   id: string;
   thumbnail: string;
   title: string;
+  videoId: string;
+}
+
+export interface PlayerStatus {
+  currentVideoIndex: number;
+  isPlaying: boolean;
+  videoTitle: string;
   videoId: string;
 }

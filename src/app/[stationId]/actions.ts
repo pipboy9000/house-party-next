@@ -1,6 +1,6 @@
 "use server";
 
-import { YouTubeSearchResult } from "@/src/lib/types";
+import { PlayerStatus, YouTubeSearchResult } from "@/src/lib/types";
 import { adminDb } from "@/src/lib/firebaseAdmin";
 import { FieldValue } from "firebase-admin/firestore";
 import { getUserIdFromSession } from "@/src/lib/actions";
@@ -11,8 +11,6 @@ const COOLDOWN_PERIOD_MS = 60 * 1000; // 1 minute cooldown
 export async function addToPlaylist(stationId: string, video: YouTubeSearchResult): Promise<{ success: boolean; error?: string }> {
 
     try {
-
-        debugger;
 
         const uid = await getUserIdFromSession();
 
@@ -64,6 +62,23 @@ export async function addToPlaylist(stationId: string, video: YouTubeSearchResul
 
     } catch (error) {
         console.error("Failed to add video to playlist:", error);
+        return { success: false, error: "Database error" };
+    }
+}
+
+export async function updateStationStatus(stationId: string, status: PlayerStatus): Promise<{ success: boolean; error?: string }> {
+    try {
+        const stationRef = adminDb.collection("stations").doc(stationId);
+        await stationRef.update({
+            currentVideoIndex: status.currentVideoIndex,
+            isPlaying: status.isPlaying,
+            videoId: status.videoId,
+            videoTitle: status.videoTitle,
+            updatedAt: FieldValue.serverTimestamp()
+        });
+        return { success: true };
+    } catch (error) {
+        console.error("Failed to update station status:", error);
         return { success: false, error: "Database error" };
     }
 }

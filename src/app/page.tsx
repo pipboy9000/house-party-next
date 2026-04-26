@@ -46,8 +46,8 @@ export default function Home() {
   }
 
   return (
-    <main className="flex min-h-screen flex-col items-center justify-center p-6 bg-slate-900 text-white">
-      <h1 className="text-4xl font-bold mb-8">House Party 🏠</h1>
+    <main className="flex min-h-[calc(100vh-80px)] flex-col items-center justify-center gap-10 p-6 bg-[#1d1d1d] text-white">
+      <img src="/logo.svg" alt="house party logo" className="w-45" />
 
       {loading ? (
         <div className="flex items-center gap-2 text-slate-400">

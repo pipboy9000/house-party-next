@@ -1,0 +1,16 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="97" height="97" viewBox="0 0 97 97">
+  <defs>
+    <style>
+      .cls-1 {
+        fill: #f0f;
+      }
+
+      .cls-2 {
+        fill: #fff;
+        fill-rule: evenodd;
+      }
+    </style>
+  </defs>
+  <circle class="cls-1" cx="48.5" cy="48.5" r="48.5"/>
+  <path id="Color_Fill_1" data-name="Color Fill 1" class="cls-2" d="M7.054,60.609L25.865,30.174l38.293-8.116,5.375,6.087V18h6.924V36.017S84.742,48.713,87,51.478C81.263,66.961,72.826,61.466,52.563,74,50.61,71.6,28.173,37.032,28.173,37.032S11.621,63.871,10.705,65.438C6.234,65.64,7.054,60.609,7.054,60.609Z"/>
+</svg>

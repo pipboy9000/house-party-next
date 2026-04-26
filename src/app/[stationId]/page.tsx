@@ -1,13 +1,13 @@
 "use client";
 
 import { useParams } from "next/navigation";
-import { useState, useEffect, useRef } from "react";
+import { useState, useEffect, useRef, useImperativeHandle, forwardRef } from "react";
 import { db } from "../../lib/firebase"; // Adjust path if needed
-import { collection, doc, onSnapshot, orderBy, query } from "firebase/firestore";
+import { collection, doc, onSnapshot, orderBy, query, serverTimestamp } from "firebase/firestore";
 import { searchYouTubeVideos } from "@/src/lib/actions";
-import { Station, Track, YouTubeSearchResult } from "@/src/lib/types";
+import { PlayerStatus, Station, Track, YouTubeSearchResult } from "@/src/lib/types";
 import { ChevronFirst, ChevronLast, LoaderCircle, Play, Plus } from "lucide-react";
-import { addToPlaylist } from "./actions";
+import { addToPlaylist, updateStationStatus } from "./actions";
 import { useAuth } from "@/src/components/AuthProvider";
 import Live from "@/src/components/Live";
 import YouTubePlayer from "@/src/components/YoutubePlayer";
@@ -24,6 +24,7 @@ export default function StationPage() {
   const debounceSearchRef = useRef<ReturnType<typeof setTimeout> | null>(null);
 
 
+  // Listen to station data in real-time
   useEffect(() => {
     if (!stationId) return;
     const unsubscribe = onSnapshot(doc(db, "stations", stationId as string), (doc) => {
@@ -32,6 +33,8 @@ export default function StationPage() {
     return () => unsubscribe();
   }, [stationId]);
 
+
+  // Close search results when clicking outside or pressing Escape
   useEffect(() => {
     function handleOutsideClick(event: MouseEvent) {
       if (
@@ -60,6 +63,7 @@ export default function StationPage() {
 
   const [playlist, setPlaylist] = useState<Track[]>([]);
 
+  // Listen to playlist changes in real-time
   useEffect(() => {
     if (!stationId) return;
 
@@ -80,6 +84,7 @@ export default function StationPage() {
     return () => unsubscribe();
   }, [stationId]);
 
+  // Cleanup debounce timer on unmount
   useEffect(() => {
     return () => {
       if (debounceSearchRef.current) {
@@ -93,7 +98,6 @@ export default function StationPage() {
     if (debounceSearchRef.current) {
       clearTimeout(debounceSearchRef.current);
     }
-
 
     const query = e.target.value;
 
@@ -122,7 +126,30 @@ export default function StationPage() {
     setSearching(false);
   }
 
+  function getStationStatus(event: YT.OnStateChangeEvent): PlayerStatus {
+    const player = event.target;
+    const videoData = player.getVideoData();
+    const { PLAYING } = window.YT.PlayerState;
+
+    // Finding the index of the currently playing song in your playlist state
+    const currentIndex = playlist.findIndex(t => t.videoId === videoData.video_id);
+
+    return {
+      currentVideoIndex: currentIndex !== -1 ? currentIndex : 0,
+      isPlaying: event.data === PLAYING,
+      videoId: videoData.video_id,
+      videoTitle: videoData.title,
+      updatedAt: serverTimestamp(),
+    } as PlayerStatus;
+  }
+
+
   function onPlayerStateChange(event: YT.OnStateChangeEvent) {
+
+    if (!stationId) return;
+
+    // Important: Only the HOST should update the global status
+    if (stationData?.hostId !== profile?.uid) return;
 
     const { ENDED, PLAYING, PAUSED, BUFFERING } = window.YT.PlayerState;
 
@@ -142,6 +169,7 @@ export default function StationPage() {
       default:
         console.log("Player state changed:", event.data);
     }
+    updateStationStatus(stationId, getStationStatus(event));
   }
 
   if (!stationData) return <div className="p-10 text-center animate-pulse">Tuning in...</div>;
@@ -227,15 +255,16 @@ export default function StationPage() {
           )}
         </div>
 
-        <div className="bg-slate-900/50 rounded-2xl flex-1 overflow-y-auto p-4">
-          <h3 className="text-xs font-bold text-white uppercase tracking-widest mb-4">Up Next</h3>
+        {/* playlist */}
+        <div className="bg-slate-900/50 rounded-2xl flex-1 overflow-y-auto">
+          <h3 className="text-xs font-bold text-white uppercase tracking-widest mb-4 p-4">Up Next</h3>
           {playlist.length === 0 ? (
             <div className="text-center py-10 opacity-30 italic text-sm">The queue is empty</div>
           ) : (
             <div className="space-y-3">
               {playlist.map((track: any, index: number) => (
-                <div key={track.id} className="flex items-center gap-3">
-                  <img src={track.thumbnail} alt={track.title} className="w-12 h-12 rounded" />
+                <div key={track.id} className="flex items-center hover:bg-slate-700/50 transition ">
+                  <img src={track.thumbnail} alt={track.title} className="w-15 h-15" />
                   <span className="line-clamp-1 text-sm leading-4 max-w-[calc(100%-100px)]">{track.title}</span>
                 </div>
               ))}
