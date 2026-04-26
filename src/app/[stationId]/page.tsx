@@ -22,6 +22,7 @@ export default function StationPage() {
   const [showSearchResults, setShowSearchResults] = useState(false);
   const searchContainerRef = useRef<HTMLDivElement>(null);
   const debounceSearchRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const [currentVideoIdx, setCurrentVideoIdx] = useState(0);
 
 
   // Listen to station data in real-time
@@ -112,18 +113,18 @@ export default function StationPage() {
     debounceSearchRef.current = setTimeout(() => search(query), 500);
   }
 
-  async function addVideo(result: YouTubeSearchResult) {
-    if (!stationId) return;
-    await addToPlaylist(stationId, result);
-    setShowSearchResults(false);
-  }
-
   async function search(query: string) {
     setSearching(true);
     const result = await searchYouTubeVideos(query);
     console.log(result);
     setSearchResults(result);
     setSearching(false);
+  }
+
+  async function addVideo(result: YouTubeSearchResult) {
+    if (!stationId) return;
+    await addToPlaylist(stationId, result);
+    setShowSearchResults(false);
   }
 
   function getStationStatus(event: YT.OnStateChangeEvent): PlayerStatus {
@@ -165,6 +166,9 @@ export default function StationPage() {
         break;
       case ENDED:
         console.log("Video has ended");
+        if (currentVideoIdx < playlist.length - 1) {
+          setCurrentVideoIdx(currentVideoIdx + 1);
+        }
         break;
       default:
         console.log("Player state changed:", event.data);
@@ -190,6 +194,9 @@ export default function StationPage() {
             ) : (
               <p className="text-slate-400">Hosted by {stationData.hostId}</p>
             )}
+            <div className="mt-2 text-slate-600">
+              Now Playing: <span className="font-medium">{stationData.videoTitle || "Nothing yet..."}</span>
+            </div>
           </>
         )}
       </div>
@@ -199,7 +206,7 @@ export default function StationPage() {
         <div className="aspect-square bg-linear-to-br from-indigo-900 to-slate-900 rounded-2xl shadow-2xl flex items-center justify-center overflow-hidden relative">
           <div className="w-full h-full aspect-video shadow-2xl flex items-center justify-center overflow-hidden relative">
             {playlist.length > 0 ? (
-              <YouTubePlayer videoId={playlist[0].videoId} onStateChange={onPlayerStateChange} />
+              <YouTubePlayer videoId={playlist[currentVideoIdx].videoId} onStateChange={onPlayerStateChange} />
             ) : (
               <div className="text-center p-8">
                 <div className="w-48 h-48 bg-slate-800 rounded-lg mx-auto mb-6 shadow-lg flex items-center justify-center">
