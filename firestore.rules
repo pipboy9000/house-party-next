@@ -18,10 +18,15 @@ service cloud.firestore {
       // 1. Allow reading the station document itself
       allow read: if request.auth != null;
       
-      // 2. Allow creating/updating stations (Server Actions handle this, but rules protect it)
-      allow write: if request.auth != null;
+      // 2. Only the host can create a station document for themselves
+      allow create: if request.auth != null
+        && request.resource.data.hostId == request.auth.uid;
 
-      // 3. Explicit rules for the playlist sub-collection
+      // 3. Only the current host can update or delete the station document
+      allow update, delete: if request.auth != null
+        && resource.data.hostId == request.auth.uid;
+
+      // 4. Explicit rules for the playlist sub-collection
       match /playlist/{videoId} {
         // Anyone logged in can read the playlist
         allow read: if request.auth != null;
