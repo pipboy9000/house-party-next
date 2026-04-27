@@ -19,6 +19,7 @@ export interface UserProfile {
 export interface Station {
   createdAt: Timestamp;
   currentVideoIndex: number;
+  currentVideoTime: number;
   hostId: string;
   isPlaying: boolean;
   stationId: string;
@@ -38,6 +39,7 @@ export interface Track {
 
 export interface PlayerStatus {
   currentVideoIndex: number;
+  currentVideoTime: number;
   isPlaying: boolean;
   videoTitle: string;
   videoId: string;

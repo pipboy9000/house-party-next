@@ -74,6 +74,7 @@ export async function updateStationStatus(stationId: string, status: PlayerStatu
             isPlaying: status.isPlaying,
             videoId: status.videoId,
             videoTitle: status.videoTitle,
+            currentVideoTime: status.currentVideoTime,
             updatedAt: FieldValue.serverTimestamp()
         });
         return { success: true };

@@ -63,6 +63,7 @@ export default function StationPage() {
   function getStationStatus(event: YT.OnStateChangeEvent): PlayerStatus {
     const player = event.target;
     const videoData = player.getVideoData();
+    const videoTime = player.getCurrentTime();
     const { PLAYING } = window.YT.PlayerState;
 
     // Finding the index of the currently playing song in your playlist state
@@ -71,6 +72,7 @@ export default function StationPage() {
     return {
       currentVideoIndex: currentIndex !== -1 ? currentIndex : 0,
       isPlaying: event.data === PLAYING,
+      currentVideoTime: videoTime,
       videoId: videoData.video_id,
       videoTitle: videoData.title,
       updatedAt: serverTimestamp(),
@@ -117,13 +119,13 @@ export default function StationPage() {
   if (!stationData) return <div className="p-10 text-center animate-pulse">Tuning in...</div>;
 
   return (
-    <div className="max-w-5xl mx-auto p-6 grid grid-cols-1 md:grid-cols-12 gap-8">
+    <div className="max-w-5xl mx-auto p-2 md:p-6 grid grid-cols-1 md:grid-cols-12 gap-8">
 
       {/* STATION HEADER */}
       <Header stationData={stationData} profile={profile} />
 
       {/* LEFT: Current Track & Controls (7 cols) */}
-      <div className="md:col-span-7">
+      <div className="md:col-span-7 aspect-video">
         <YouTubePlayer videoId={playlist[currentVideoIdx].videoId} onStateChange={onPlayerStateChange} />
       </div>
 
