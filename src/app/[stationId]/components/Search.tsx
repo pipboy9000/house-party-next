@@ -3,13 +3,15 @@ import { YouTubeSearchResult } from "@/src/lib/types";
 import { LoaderCircle, Plus } from "lucide-react";
 import { useEffect, useRef, useState } from "react";
 
-export default function Search({ addVideo }: { addVideo: (q: YouTubeSearchResult) => void }) {
+export default function Search({ addVideo }: { addVideo: (q: YouTubeSearchResult) => Promise<{ success: boolean; error?: string }> }) {
 
     const searchContainerRef = useRef<HTMLDivElement>(null);
     const debounceSearchRef = useRef<ReturnType<typeof setTimeout> | null>(null);
     const [searchResults, setSearchResults] = useState<YouTubeSearchResult[]>([]);
     const [searching, setSearching] = useState(false);
     const [showSearchResults, setShowSearchResults] = useState(false);
+    const [addError, setAddError] = useState<string | null>(null);
+    const errorTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
 
     // Close search results when clicking outside or pressing Escape
     useEffect(() => {
@@ -41,9 +43,8 @@ export default function Search({ addVideo }: { addVideo: (q: YouTubeSearchResult
     // Cleanup debounce timer on unmount
     useEffect(() => {
         return () => {
-            if (debounceSearchRef.current) {
-                clearTimeout(debounceSearchRef.current);
-            }
+            if (debounceSearchRef.current) clearTimeout(debounceSearchRef.current);
+            if (errorTimerRef.current) clearTimeout(errorTimerRef.current);
         };
     }, []);
 
@@ -75,6 +76,7 @@ export default function Search({ addVideo }: { addVideo: (q: YouTubeSearchResult
     }
 
     return (
+        <>
         <div className="md:col-span-5 flex flex-col gap-4 max-h-[80vh]">
 
             <div ref={searchContainerRef} className="relative">
@@ -97,9 +99,16 @@ export default function Search({ addVideo }: { addVideo: (q: YouTubeSearchResult
                     <div className="shadow-[0px_20px_30px_-20px_rgba(0,0,0,1)] absolute z-10 w-full mt-1 rounded-xl overflow-y-auto bg-[#34343488] text-[#f5f5f5] backdrop-blur-xs">
                         {searchResults.map((result) => (
                             <div
-                                onClick={() => {
+                                onClick={async () => {
+                                    debugger;
                                     setShowSearchResults(false);
-                                    addVideo(result)
+                                    const res = await addVideo(result);
+                                    if (!res.success) {
+                                        debugger;
+                                        setAddError(res.error ?? "Failed to add video");
+                                        if (errorTimerRef.current) clearTimeout(errorTimerRef.current);
+                                        errorTimerRef.current = setTimeout(() => setAddError(null), 4000);
+                                    }
                                 }}
                                 key={result.id} className="group flex items-center border-b border-slate-700/50 gap-3 hover:bg-slate-700 cursor-pointer transition">
                                 <img src={result.thumbnail} alt={result.title} className="w-12 h-12" />
@@ -111,5 +120,11 @@ export default function Search({ addVideo }: { addVideo: (q: YouTubeSearchResult
                 )}
             </div>
         </div>
+        {addError && (
+            <div className="error fixed bottom-6 right-6 z-50 bg-red-900/90 border border-red-500/50 text-red-200 text-sm px-4 py-3 rounded-xl shadow-lg backdrop-blur-sm">
+                {addError}
+            </div>
+        )}
+        </>
     )
 }

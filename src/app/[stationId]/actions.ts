@@ -53,11 +53,11 @@ export async function addToPlaylist(stationId: string, video: YouTubeSearchResul
                 addedBy: uid
             });
 
-            // Single transactional write — removed the duplicate standalone userRef.update()
             transaction.update(userRef, { lastAddedAt: FieldValue.serverTimestamp() });
-        });
 
-        return { success: true };
+            return { success: true };
+        });
+        return result;
 
     } catch (error) {
         console.error("Failed to add video to playlist:", error);

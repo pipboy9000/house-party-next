@@ -69,8 +69,8 @@ export default function StationPage() {
   }, [stationId]);
 
   async function addVideo(result: YouTubeSearchResult) {
-    if (!stationId) return;
-    await addToPlaylist(stationId, result);
+    if (!stationId) return { success: false, error: "No station" };
+    return await addToPlaylist(stationId, result);
   }
 
   function getStationStatus(event: YT.OnStateChangeEvent): PlayerStatus {
