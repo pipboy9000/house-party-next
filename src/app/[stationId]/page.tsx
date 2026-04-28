@@ -3,7 +3,7 @@
 import { useParams } from "next/navigation";
 import { useState, useEffect, useRef } from "react";
 import { db } from "../../lib/firebase"; // Adjust path if needed
-import { collection, doc, onSnapshot, orderBy, query, serverTimestamp } from "firebase/firestore";
+import { collection, doc, getDoc, onSnapshot, orderBy, query, serverTimestamp } from "firebase/firestore";
 import { PlayerStatus, Station, Track, YouTubeSearchResult } from "@/src/lib/types";
 import { addToPlaylist, updateStationStatus } from "./actions";
 import { useAuth } from "@/src/components/AuthProvider";
@@ -21,6 +21,7 @@ export default function StationPage() {
   const [currentVideoIdx, setCurrentVideoIdx] = useState(0);
   const currentVideoIdxRef = useRef(0);
   const [isLive, setIsLive] = useState(false);
+  const [hostName, setHostName] = useState<string | null>(null);
   const playerRef = useRef<YouTubePlayerRef | null>(null);
 
   // Listen to station data in real-time
@@ -36,6 +37,14 @@ export default function StationPage() {
     );
     return () => unsubscribe();
   }, [stationId]);
+
+  // Fetch host display name once the hostId is known
+  useEffect(() => {
+    if (!stationData?.hostId) return;
+    getDoc(doc(db, "users", stationData.hostId)).then((snap) => {
+      if (snap.exists()) setHostName(snap.data().displayName ?? null);
+    });
+  }, [stationData?.hostId]);
 
   const [playlist, setPlaylist] = useState<Track[]>([]);
 
@@ -135,7 +144,7 @@ export default function StationPage() {
     <div className="max-w-5xl mx-auto p-2 md:p-6 grid grid-cols-1 md:grid-cols-12 gap-8">
       
       {/* STATION HEADER */}
-      <Header stationData={stationData} profile={profile} isLive={isLive} />
+      <Header stationData={stationData} profile={profile} isLive={isLive} hostName={hostName} />
 
       {/* LEFT: Current Track & Controls (7 cols) */}
       <div className="md:col-span-7 aspect-video">

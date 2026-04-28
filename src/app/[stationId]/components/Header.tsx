@@ -1,7 +1,7 @@
 import Live from "@/src/components/Live";
 import { Station, UserProfile } from "@/src/lib/types";
 
-export default function Header({ stationData, profile, isLive }: { stationData: Station | null, profile: UserProfile | null, isLive: boolean }) {
+export default function Header({ stationData, profile, isLive, hostName }: { stationData: Station | null, profile: UserProfile | null, isLive: boolean, hostName: string | null }) {
 
     return (
         <div className="md:col-span-12 flex flex-col gap-0 items-start">
@@ -13,7 +13,7 @@ export default function Header({ stationData, profile, isLive }: { stationData: 
                         {stationData.hostId === profile?.uid ? (
                             <p className="text-slate-400">You are hosting this station</p>
                         ) : (
-                            <p className="text-slate-400">Hosted by {stationData.hostId}</p>
+                            <p className="text-slate-400">Hosted by {hostName ?? stationData.hostId}</p>
                         )}
                     </div>
                     <div className="mt-2 text-slate-600">
