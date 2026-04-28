@@ -1,7 +1,7 @@
 "use client";
 
 import { useParams } from "next/navigation";
-import { useState, useEffect, useRef } from "react";
+import { useState, useEffect, useRef, use } from "react";
 import { db } from "../../lib/firebase"; // Adjust path if needed
 import { collection, doc, onSnapshot, orderBy, query, serverTimestamp } from "firebase/firestore";
 import { searchYouTubeVideos } from "@/src/lib/actions";
@@ -10,7 +10,7 @@ import { ChevronFirst, ChevronLast, LoaderCircle, Play, Plus } from "lucide-reac
 import { addToPlaylist, updateStationStatus } from "./actions";
 import { useAuth } from "@/src/components/AuthProvider";
 import Live from "@/src/components/Live";
-import YouTubePlayer from "@/src/components/YoutubePlayer";
+import YouTubePlayer, { YouTubePlayerRef } from "@/src/components/YoutubePlayer";
 import Playlist from "./components/Playlist";
 import Search from "./components/Search";
 import Header from "./components/Header";
@@ -22,6 +22,7 @@ export default function StationPage() {
   const [stationData, setStationData] = useState<Station | null>(null);
   const [currentVideoIdx, setCurrentVideoIdx] = useState(0);
   const [isLive, setIsLive] = useState(true);
+  const playerRef = useRef<YouTubePlayerRef | null>(null);
 
   // Listen to station data in real-time
   useEffect(() => {
@@ -84,9 +85,6 @@ export default function StationPage() {
 
     if (!stationId) return;
 
-    // Important: Only the HOST should update the global status
-    if (stationData?.hostId !== profile?.uid) return;
-
     const { ENDED, PLAYING, PAUSED, BUFFERING } = window.YT.PlayerState;
 
     switch (event.data) {
@@ -108,12 +106,21 @@ export default function StationPage() {
       default:
         console.log("Player state changed:", event.data);
     }
-    updateStationStatus(stationId, getStationStatus(event));
+
+    // Important: Only the HOST should update the global status
+    if (stationData?.hostId === profile?.uid)
+      updateStationStatus(stationId, getStationStatus(event));
+
   }
 
   function onTrackClicked(index: number) {
     if (!stationId) return;
     setCurrentVideoIdx(index);
+
+    const player = playerRef.current?.getInternalPlayer();
+    if (player) {
+      player.loadVideoById(playlist[index].videoId);
+    }
   }
 
   if (!stationData) return <div className="p-10 text-center animate-pulse">Tuning in...</div>;
@@ -122,11 +129,11 @@ export default function StationPage() {
     <div className="max-w-5xl mx-auto p-2 md:p-6 grid grid-cols-1 md:grid-cols-12 gap-8">
 
       {/* STATION HEADER */}
-      <Header stationData={stationData} profile={profile} />
+      <Header stationData={stationData} profile={profile} isLive={isLive} />
 
       {/* LEFT: Current Track & Controls (7 cols) */}
       <div className="md:col-span-7 aspect-video">
-        <YouTubePlayer videoId={playlist[currentVideoIdx].videoId} onStateChange={onPlayerStateChange} />
+        <YouTubePlayer ref={playerRef} videoId={playlist[currentVideoIdx]?.videoId || "3GwjfUFyY6M"} onStateChange={onPlayerStateChange} /> {/* Fallback to a default video (Celebrate) if playlist is empty */}
       </div>
 
 
@@ -136,7 +143,7 @@ export default function StationPage() {
         <Search addVideo={addVideo} />
 
         {/* playlist */}
-        <Playlist playlist={playlist} onTrackClicked={onTrackClicked} />
+        <Playlist playlist={playlist} onTrackClicked={onTrackClicked} currentVideoIdx={currentVideoIdx} />
       </div>
     </div>
   );

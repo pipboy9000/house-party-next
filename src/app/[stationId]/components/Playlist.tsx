@@ -1,7 +1,7 @@
 import { Track } from "@/src/lib/types";
 import { Play } from "lucide-react";
 
-export default function Playlist({ playlist, onTrackClicked }: { playlist: Track[], onTrackClicked: (idx: number) => void }) {
+export default function Playlist({ playlist, onTrackClicked, currentVideoIdx }: { playlist: Track[], onTrackClicked: (idx: number) => void, currentVideoIdx: number }) {
     return (
         <div className="md:col-span-5 flex flex-col gap-4 max-h-[80vh]">
 
