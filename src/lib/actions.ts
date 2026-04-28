@@ -52,7 +52,10 @@ export async function getUserIdFromSession() : Promise<string | null> {
   }
 }
 
-export async function createStation(hostId: string) : Promise<{ success: boolean; stationId?: string; error?: string }> {
+export async function createStation() : Promise<{ success: boolean; stationId?: string; error?: string }> {
+
+    const hostId = await getUserIdFromSession();
+    if (!hostId) return { success: false, error: "Not authenticated" };
 
     try {
         let stationId = generateStationId();

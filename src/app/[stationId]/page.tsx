@@ -1,12 +1,10 @@
 "use client";
 
 import { useParams } from "next/navigation";
-import { useState, useEffect, useRef, use } from "react";
+import { useState, useEffect, useRef } from "react";
 import { db } from "../../lib/firebase"; // Adjust path if needed
 import { collection, doc, onSnapshot, orderBy, query, serverTimestamp } from "firebase/firestore";
-import { searchYouTubeVideos } from "@/src/lib/actions";
 import { PlayerStatus, Station, Track, YouTubeSearchResult } from "@/src/lib/types";
-import { ChevronFirst, ChevronLast, LoaderCircle, Play, Plus } from "lucide-react";
 import { addToPlaylist, updateStationStatus } from "./actions";
 import { useAuth } from "@/src/components/AuthProvider";
 import Live from "@/src/components/Live";
@@ -21,15 +19,21 @@ export default function StationPage() {
   const { profile } = useAuth();
   const [stationData, setStationData] = useState<Station | null>(null);
   const [currentVideoIdx, setCurrentVideoIdx] = useState(0);
-  const [isLive, setIsLive] = useState(true);
+  const currentVideoIdxRef = useRef(0);
+  const [isLive, setIsLive] = useState(false);
   const playerRef = useRef<YouTubePlayerRef | null>(null);
 
   // Listen to station data in real-time
   useEffect(() => {
     if (!stationId) return;
-    const unsubscribe = onSnapshot(doc(db, "stations", stationId as string), (doc) => {
-      if (doc.exists()) setStationData(doc.data() as Station);
-    });
+    const unsubscribe = onSnapshot(
+      doc(db, "stations", stationId as string),
+      (doc) => {
+        if (doc.exists()) setStationData(doc.data() as Station);
+        setIsLive(true);
+      },
+      () => setIsLive(false)
+    );
     return () => unsubscribe();
   }, [stationId]);
 
@@ -50,7 +54,6 @@ export default function StationPage() {
         ...(doc.data() as Track)
       }));
       setPlaylist(tracks);
-      console.log(tracks);
     });
 
     return () => unsubscribe();
@@ -99,8 +102,10 @@ export default function StationPage() {
         break;
       case ENDED:
         console.log("Video has ended");
-        if (currentVideoIdx < playlist.length - 1) {
-          setCurrentVideoIdx(currentVideoIdx + 1);
+        if (currentVideoIdxRef.current < playlist.length - 1) {
+          const next = currentVideoIdxRef.current + 1;
+          currentVideoIdxRef.current = next;
+          setCurrentVideoIdx(next);
         }
         break;
       default:
@@ -115,6 +120,7 @@ export default function StationPage() {
 
   function onTrackClicked(index: number) {
     if (!stationId) return;
+    currentVideoIdxRef.current = index;
     setCurrentVideoIdx(index);
 
     const player = playerRef.current?.getInternalPlayer();
@@ -127,7 +133,7 @@ export default function StationPage() {
 
   return (
     <div className="max-w-5xl mx-auto p-2 md:p-6 grid grid-cols-1 md:grid-cols-12 gap-8">
-
+      
       {/* STATION HEADER */}
       <Header stationData={stationData} profile={profile} isLive={isLive} />
 

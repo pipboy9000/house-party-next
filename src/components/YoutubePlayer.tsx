@@ -84,7 +84,7 @@ export default function YouTubePlayer({ videoId, onStateChange, ref }: YouTubePl
   // SMOOTH SWITCH: Runs when videoId prop updates
   useEffect(() => {
     if (playerRef.current && videoId) {
-      const currentId = playerRef.current.getVideoData()?.video_id;
+      const currentId = playerRef.current?.getVideoData()?.video_id;
       if (currentId !== videoId) {
         playerRef.current.loadVideoById(videoId);
       }

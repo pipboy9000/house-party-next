@@ -32,7 +32,7 @@ export default function Home() {
     }
 
     try {
-      const response = await createStation(user.uid); // Pass the user ID to the server action
+      const response = await createStation();
       if (response.success) {
         router.push(`/${response.stationId}`);
       }

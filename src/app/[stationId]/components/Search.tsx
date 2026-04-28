@@ -1,6 +1,5 @@
 import { searchYouTubeVideos } from "@/src/lib/actions";
 import { YouTubeSearchResult } from "@/src/lib/types";
-import { add } from "firebase/firestore/pipelines";
 import { LoaderCircle, Plus } from "lucide-react";
 import { useEffect, useRef, useState } from "react";
 

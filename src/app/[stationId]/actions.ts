@@ -4,7 +4,6 @@ import { PlayerStatus, YouTubeSearchResult } from "@/src/lib/types";
 import { adminDb } from "@/src/lib/firebaseAdmin";
 import { FieldValue } from "firebase-admin/firestore";
 import { getUserIdFromSession } from "@/src/lib/actions";
-import { get } from "http";
 
 const COOLDOWN_PERIOD_MS = 60 * 1000; // 1 minute cooldown
 
@@ -29,7 +28,8 @@ export async function addToPlaylist(stationId: string, video: YouTubeSearchResul
 
             const userRef = adminDb.collection("users").doc(uid);
 
-            const userSnap = await userRef.get();
+            // Use transaction.get() so this read participates in the transaction
+            const userSnap = await transaction.get(userRef);
 
             if (!userSnap.exists) {
                 console.error("User document not found for UID:", uid);
@@ -44,8 +44,6 @@ export async function addToPlaylist(stationId: string, video: YouTubeSearchResul
                 return { success: false, error: "You are adding videos too quickly. Please wait a moment." };
             }
 
-            await userRef.update({ lastAddedAt: FieldValue.serverTimestamp() });
-
             transaction.set(stationRef, {
                 id,
                 videoId: video.id,
@@ -55,6 +53,7 @@ export async function addToPlaylist(stationId: string, video: YouTubeSearchResul
                 addedBy: uid
             });
 
+            // Single transactional write — removed the duplicate standalone userRef.update()
             transaction.update(userRef, { lastAddedAt: FieldValue.serverTimestamp() });
         });
 

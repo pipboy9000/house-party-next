@@ -1,3 +1,5 @@
+"use client";
+
 import { ReactQRCode } from "@lglab/react-qr-code";
 
 export default function QrCode({stationId}: {stationId: string}) {
