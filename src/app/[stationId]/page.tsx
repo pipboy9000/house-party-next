@@ -12,6 +12,7 @@ import YouTubePlayer, { YouTubePlayerRef } from "@/src/components/YoutubePlayer"
 import Playlist from "./components/Playlist";
 import Search from "./components/Search";
 import Header from "./components/Header";
+import Link from "next/link";
 
 
 export default function StationPage() {
@@ -23,6 +24,7 @@ export default function StationPage() {
   const [isLive, setIsLive] = useState(false);
   const [hostName, setHostName] = useState<string | null>(null);
   const playerRef = useRef<YouTubePlayerRef | null>(null);
+  const [error, setError] = useState<string | null>(null);
 
   // Listen to station data in real-time
   useEffect(() => {
@@ -30,10 +32,18 @@ export default function StationPage() {
     const unsubscribe = onSnapshot(
       doc(db, "stations", stationId as string),
       (doc) => {
-        if (doc.exists()) setStationData(doc.data() as Station);
-        setIsLive(true);
+        if (doc.exists()) {
+          setStationData(doc.data() as Station);
+          setIsLive(true);
+        } else {
+          setIsLive(false);
+          setError("Station not found :(");
+        }
       },
-      () => setIsLive(false)
+      () => {
+        setIsLive(false);
+        setError("Failed to fetch station data");
+      }
     );
     return () => unsubscribe();
   }, [stationId]);
@@ -55,7 +65,7 @@ export default function StationPage() {
     // Listen to the 'playlist' sub-collection
     const playlistRef = collection(db, "stations", stationId, "playlist");
 
-    // Query: Order by likes (descending), then by time added (ascending)
+    // Query: Order by time added (ascending)
     const q = query(playlistRef, orderBy("addedAt", "asc"));
 
     const unsubscribe = onSnapshot(q, (snapshot) => {
@@ -124,7 +134,6 @@ export default function StationPage() {
     // Important: Only the HOST should update the global status
     if (stationData?.hostId === profile?.uid)
       updateStationStatus(stationId, getStationStatus(event));
-
   }
 
   function onTrackClicked(index: number) {
@@ -138,11 +147,20 @@ export default function StationPage() {
     }
   }
 
-  if (!stationData) return <div className="p-10 text-center animate-pulse">Tuning in...</div>;
+  if (!stationData && !error) return <div className="p-10 text-center animate-pulse">Tuning in...</div>;
+
+  if (error) return (
+    <div className="flex flex-col items-center justify-center gap-6 mt-5">
+      <div className="text-center text-red-500">{error}</div>
+      <Link href="/" className="flex flex-col items-center gap-5" >Go Back
+        <img src="./logo.svg" alt="Logo" className="bg-black rounded-full p-3"/>
+      </Link>
+    </div>
+  );
 
   return (
     <div className="max-w-5xl mx-auto p-2 md:p-6 grid grid-cols-1 md:grid-cols-12 gap-8">
-      
+
       {/* STATION HEADER */}
       <Header stationData={stationData} profile={profile} isLive={isLive} hostName={hostName} />
 

@@ -100,11 +100,9 @@ export default function Search({ addVideo }: { addVideo: (q: YouTubeSearchResult
                         {searchResults.map((result) => (
                             <div
                                 onClick={async () => {
-                                    debugger;
                                     setShowSearchResults(false);
                                     const res = await addVideo(result);
                                     if (!res.success) {
-                                        debugger;
                                         setAddError(res.error ?? "Failed to add video");
                                         if (errorTimerRef.current) clearTimeout(errorTimerRef.current);
                                         errorTimerRef.current = setTimeout(() => setAddError(null), 4000);
