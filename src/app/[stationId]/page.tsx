@@ -153,7 +153,7 @@ export default function StationPage() {
     <div className="flex flex-col items-center justify-center gap-6 mt-5">
       <div className="text-center text-red-500">{error}</div>
       <Link href="/" className="flex flex-col items-center gap-5" >Go Back
-        <img src="./logo.svg" alt="Logo" className="bg-black rounded-full p-3"/>
+        <img src="./logo.svg" alt="Logo" className="bg-black rounded-full w-50 h-50"/>
       </Link>
     </div>
   );
